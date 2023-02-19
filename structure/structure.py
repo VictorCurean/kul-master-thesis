@@ -52,7 +52,7 @@ def annotate_sequence_by_region(seq):
     res = number_a_sequence(seq)
 
 def annotate_sequence(struct, pdb_id):
-    OUT_DIR = "C:\\Users\\curea\\PycharmProjects\\kul-thesis-ab\\annotated_sequences\\"
+    OUT_DIR = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\annotated_sequences\\"
     with open(OUT_DIR+pdb_id+".seqann", "w") as file:
         file.write("ID\t" + pdb_id + "\n")
 
