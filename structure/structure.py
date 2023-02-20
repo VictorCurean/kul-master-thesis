@@ -1,6 +1,7 @@
 import Bio.PDB.Selection
 from utils import *
 from Bio.PDB import NeighborSearch, PDBParser
+import re
 
 parser = PDBParser(PERMISSIVE=False)
 
@@ -48,8 +49,26 @@ def write_annotated_sequence(file, struct, type):
     file.write(SEQ + "\n")
     file.write(ANN + "\n")
 
-def annotate_sequence_by_region(seq):
-    res = number_a_sequence(seq)
+    if type in ["H", "L"]:
+        file.write(annotate_sequence_by_region(SEQ, type) + "\n")
+
+def annotate_sequence_by_region(seq, type):
+    ann = ""
+    res = get_martin_numbering(seq)
+    for i in range(len(seq)):
+        pos_martin = int(re.sub("[^0-9]", "", res[i].split(" ")[0]))
+        if type == "H":
+            if pos_martin in MARTIN_NUMBERING_HFR:
+                ann += "_"
+            else:
+                ann += "C"
+
+        elif type == "L":
+            if pos_martin in MARTIN_NUMBERING_LFR:
+                ann += "_"
+            else:
+                ann += "C"
+    return ann
 
 def annotate_sequence(struct, pdb_id):
     OUT_DIR = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\annotated_sequences\\"
@@ -68,6 +87,9 @@ def annotate_sequence(struct, pdb_id):
         file.write("Antigen" + "\n")
         write_annotated_sequence(file, struct, "C")
 
+def get_motifs():
+    pass
+
 struct = get_structure("1A2Y", "C:\\Users\\curea\\PycharmProjects\\kul-thesis-ab\\datasets\\1A2Y_1.pdb")
 
 for r in struct.get_residues():
@@ -77,3 +99,4 @@ for r in struct.get_residues():
 
 
 annotate_sequence(struct, "1A2Y")
+

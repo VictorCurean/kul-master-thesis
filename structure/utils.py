@@ -15,10 +15,10 @@ MARTIN_NUMBERING_LFR = list(range(1, 24)) + list(range(35, 50)) + list(range(57,
 MARTIN_NUMBERING_HFR = list(range(1, 31)) + list(range(36, 50)) + list(range(66, 95)) + list(range(103, 113))
 
 
-def number_a_sequence(seq):
+def get_martin_numbering(seq):
     API_NUMERBING_URL = "http://www.bioinf.org.uk/abs/abnum/abnum.cgi?plain=1&aaseq={seq}&scheme={scheme}"
 
     response = requests.get(API_NUMERBING_URL.format(seq=seq, scheme="-m"))
-    return response.text
+    return response.text.split("\n")
 
-number_a_sequence("QVQLQESGPGLVAPSQSLSITCTVSGFSLTGYGVNWVRQPPGKGLEWLGMIWGDGNTDYNSALKSRLSISKDNSKSQVFLKMNSLHTDDTARYYCARERDYRLDYWGQGTTLTVSS")
+#get_martin_numbering("QVQLQESGPGLVAPSQSLSITCTVSGFSLTGYGVNWVRQPPGKGLEWLGMIWGDGNTDYNSALKSRLSISKDNSKSQVFLKMNSLHTDDTARYYCARERDYRLDYWGQGTTLTVSS")
