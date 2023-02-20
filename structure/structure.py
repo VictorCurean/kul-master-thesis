@@ -36,6 +36,12 @@ def get_residues_by_type(struct, type):
     # H - heavy chain, L - light chain, C - antigen
     return [r for r in struct.get_residues() if r.get_full_id()[2] == type]
 
+def translate_to_1_notation(seq):
+    res = ""
+    for r in seq:
+        res += AA_3to1[r.get_resname()]
+    return res
+
 def write_annotated_sequence(file, struct, type):
     SEQ = ""
     ANN = ""
@@ -51,6 +57,8 @@ def write_annotated_sequence(file, struct, type):
 
     if type in ["H", "L"]:
         file.write(annotate_sequence_by_region(SEQ, type) + "\n")
+
+    return SEQ, ANN
 
 def annotate_sequence_by_region(seq, type):
     ann = ""
@@ -100,3 +108,155 @@ for r in struct.get_residues():
 
 annotate_sequence(struct, "1A2Y")
 
+class Complex:
+    def __init__(self, pdb_id, pdb_file):
+        self.__pdb_id = pdb_id
+        self.__struct = get_structure(pdb_id, pdb_file)
+        self.__lc = translate_to_1_notation(get_residues_by_type(self.__struct, "L"))
+        self.__hc = translate_to_1_notation(get_residues_by_type(self.__struct, "H"))
+        self.__martin_lc = get_martin_numbering(self.__lc)
+        self.__martin_hc = get_martin_numbering(self.__hc)
+        self.__cutoff = 5
+        self.motifs = []
+
+    def __get_martin_scheme_by_type(self, type):
+        if type == "L":
+            return self.__martin_lc
+        elif type == "H":
+            return self.__martin_hc
+
+    def __get_motifs_para_epi(self, begin, end, type, loc):
+        ab_residues = get_residues_by_type(self.__struct, type)
+        antigen_residues = get_residues_by_type(self.__struct, "C")
+
+        antigen_nb_residues = []
+        ab_nb_residues = []
+
+        martin_scheme = self.__get_martin_scheme_by_type(type)
+
+        for i in range(len(ab_residues)):
+            martin_pos = int(re.sub("[^0-9]", "", martin_scheme[i].split(" ")[0]))
+            if begin <= martin_pos <= end:
+                nb = get_neighboring_residues(self.__struct, ab_residues[i], self.__cutoff)
+                if len(nb) != 0:
+                    ab_nb_residues.append(ab_residues[i])
+                    antigen_nb_residues += nb
+
+
+        antigen_nb_residues = list(set(antigen_nb_residues))
+        antigen_nb_residues.sort(key=lambda x : x.id[1], reverse=False)
+
+        if len(antigen_nb_residues + ab_nb_residues) != 0:
+            ant_res, ant_enc = self.__get_gaps(antigen_nb_residues, antigen_residues)
+            lc_res, lc_enc = self.__get_gaps(ab_nb_residues, ab_residues)
+
+            self.motifs.append(Motif(self.__pdb_id, "para-epi", lc_res, ant_res, lc_enc, ant_enc, loc))
+
+
+    def __get_gaps(self, res_list, full_res):
+        residues_no_gaps = []
+        bool_encodings = []
+
+        min_res = min(res_list, key=lambda res : res.id[1])
+        max_res = max(res_list, key=lambda res: res.id[1])
+
+        for i in range(min_res.id[1], max_res.id[1] + 1):
+            if i in [x.id[1] for x in res_list]:
+                residues_no_gaps.append([x for x in res_list if x.id[1] == i][0])
+                bool_encodings.append(True)
+            else:
+                residues_no_gaps.append([x for x in full_res if x.id[1] == i][0])
+                bool_encodings.append(False)
+
+        return residues_no_gaps, bool_encodings
+
+    def get_motifs(self):
+        #LFR1
+        self.__get_motifs_para_epi(1, 23, "L", "LFR1")
+        #CDR-L1
+        self.__get_motifs_para_epi(24, 34, "L", "CDR-L1")
+        #LFR2
+        self.__get_motifs_para_epi(35, 49, "L", "LFR2")
+        #CDR-L2
+        self.__get_motifs_para_epi(50, 56, "L", "CDR-L2")
+        #LFR3
+        self.__get_motifs_para_epi(57, 88, "L", "LFR3")
+        #CDR-L3
+        self.__get_motifs_para_epi(89, 97, "L", "CDR-L3")
+        #LFR4
+        self.__get_motifs_para_epi(98, 110, "L", "LFR4")
+
+        #HFR1
+        self.__get_motifs_para_epi(1, 30, "H", "HFR1")
+        #CDR-H1
+        self.__get_motifs_para_epi(31, 35, "H", "CDR-H1")
+        #HFR2
+        self.__get_motifs_para_epi(36, 49, "H", "HFR2")
+        #CDR-H2
+        self.__get_motifs_para_epi(50, 65, "H", "CDR-H2")
+        #HFR3
+        self.__get_motifs_para_epi(66, 94, "H", "HFR3")
+        #CDR-H3
+        self.__get_motifs_para_epi(95, 102, "H", "CDR-H3")
+        #HFR4
+        self.__get_motifs_para_epi(103, 113, "H", "HFR4")
+
+    def __cleanup_motifs(self):
+        self.motifs = [m for m in self.motifs if m.is_trivial() is False]
+
+    def write_motifs(self, paratope_file, epitope_file):
+        #self.__cleanup_motifs()
+
+        open(paratope_file, "w").close()
+        open(epitope_file, "w").close()
+
+        for m in self.motifs:
+            m.write_motifs_akbar_encoding(paratope_file, epitope_file)
+
+
+class Motif:
+    def __init__(self, pdb_id, type, res_origin, res_target, encodings_origin, encodings_target, ab_location):
+        self.pdb_id = pdb_id
+        self.type = type
+        self.res_origin = res_origin
+        self.res_target = res_target
+        self.encodings_origin = encodings_origin
+        self.encodings_target = encodings_target
+        self.ab_location = ab_location
+
+    def write_motifs_akbar_encoding(self, paratope_file, epitope_file):
+        notation_origin = self.__get_akbar_notation_from_res(self.encodings_origin)
+        notation_target = self.__get_akbar_notation_from_res(self.encodings_target)
+
+        with open(paratope_file, "a") as pf:
+            pf.write(notation_origin + "\n")
+        with open(epitope_file, "a") as ef:
+            ef.write(notation_target + "\n")
+    def __get_akbar_notation_from_res(self, res_encodings):
+        notation = ""
+        counter = 0
+        for e in res_encodings:
+            if e is True:
+                if counter != 0:
+                    notation += str(counter)
+                    counter = 0
+                notation += "X"
+            else:
+                counter += 1
+
+        return notation
+
+    def is_trivial(self):
+        if len(self.res_origin) == 1:
+            return True
+        return False
+
+
+a = Complex("1A2Y", "C:\\Users\\curea\\PycharmProjects\\kul-thesis-ab\\datasets\\1A2Y_1.pdb")
+a.get_motifs()
+
+epitope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\epitope_motifs.txt"
+paratope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs.txt"
+
+a.write_motifs(paratope_file, epitope_file)
+b = 1
