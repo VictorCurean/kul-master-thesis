@@ -15,10 +15,10 @@ def get_opposite_complex(origin, targets):
     targets_to_keep = list()
     for t in targets:
         #origin is antigen, target in heavy- or light chain:
-        if t.get_full_id()[2] in ["H", "L"] and type_origin == "C":
+        if t.get_full_id()[2] in ["H", "L"] and type_origin not in ["H", "L"]:
             targets_to_keep.append(t)
         #origin in heavy- or light chain, target in antigen
-        elif t.get_full_id()[2] == "C" and type_origin in ["H", "L"]:
+        elif t.get_full_id()[2] not in ["H", "L"] and type_origin in ["H", "L"]:
             targets_to_keep.append(t)
 
     return set(targets_to_keep)
@@ -36,7 +36,13 @@ def get_neighboring_residues(struct, target_residue, cutoff):
 
 def get_residues_by_type(struct, type):
     # H - heavy chain, L - light chain, C - antigen
-    return [r for r in struct.get_residues() if r.get_full_id()[2] == type]
+    res = list(struct.get_residues())
+    res1 = [r for r in struct.get_residues() if r.get_full_id()[2] not in ["H", "C"]]
+
+    if type in ["H", "L"]:
+        return [r for r in struct.get_residues() if r.get_full_id()[2] == type]
+    else:
+        return [r for r in struct.get_residues() if r.get_full_id()[2] not in ["H", "L"]]
 
 def translate_to_1_notation(seq):
     res = ""
@@ -163,7 +169,9 @@ class Complex:
         min_res = min(res_list, key=lambda res : res.id[1])
         max_res = max(res_list, key=lambda res: res.id[1])
 
-        for i in range(min_res.id[1], max_res.id[1] + 1):
+        index_list = [r.id[1] for r in full_res if min_res.id[1] <= r.id[1] <= max_res.id[1]]
+
+        for i in index_list:
             if i in [x.id[1] for x in res_list]:
                 residues_no_gaps.append([x for x in res_list if x.id[1] == i][0])
                 bool_encodings.append(True)
@@ -269,8 +277,8 @@ paratope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\ku
 
 def read_all_motifs():
     path = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets"
-    #open(epitope_file, "w").close()
-    #open(paratope_file, "w").close()
+    open(epitope_file, "w").close()
+    open(paratope_file, "w").close()
     files = [f for f in listdir(path) if isfile(join(path, f))]
 
     err_files = 0
@@ -281,9 +289,10 @@ def read_all_motifs():
         try:
             comp.get_motifs()
             comp.check_motifs()
-            #comp.write_motifs(paratope_file, epitope_file)
-        except:
+            comp.write_motifs(paratope_file, epitope_file)
+        except IndexError:
+            print(f + " .... Index Error")
             err_files += 1
     print(err_files)
 
-#read_all_motifs()
+read_all_motifs()
