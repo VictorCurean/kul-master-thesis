@@ -15,6 +15,19 @@ MARTIN_NUMBERING_LFR = list(range(1, 24)) + list(range(35, 50)) + list(range(57,
 MARTIN_NUMBERING_HFR = list(range(1, 31)) + list(range(36, 50)) + list(range(66, 95)) + list(range(103, 113))
 
 
+AA_TO_TYPE = {"G": "A", "A": "A", "V": "A", "L": "A", "I": "A", "P": "A", "M": "A",
+              "F": "B", "Y": "B", "W": "B",
+              "S": "C", "T": "C", "C": "C", "N": "C", "Q": "C",
+              "D": "D", "E": "D",
+              "R": "E", "H": "E", "K": "E"}
+
+
+AA_TO_TYPE_LOOSE = {"G": "Z", "A": "Z", "V": "Z", "L": "Z", "I": "Z", "P": "Z", "M": "Z",
+              "F": "Z", "Y": "Z", "W": "Z",
+              "S": "Y", "T": "Y", "C": "Y", "N": "Y", "Q": "Y",
+              "D": "Y", "E": "Y",
+              "R": "Y", "H": "Y", "K": "Y"}
+
 def get_martin_numbering(seq):
     API_NUMERBING_URL = "http://www.bioinf.org.uk/abs/abnum/abnum.cgi?plain=1&aaseq={seq}&scheme={scheme}"
 

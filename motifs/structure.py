@@ -36,8 +36,6 @@ def get_neighboring_residues(struct, target_residue, cutoff):
 
 def get_residues_by_type(struct, type):
     # H - heavy chain, L - light chain, C - antigen
-    res = list(struct.get_residues())
-    res1 = [r for r in struct.get_residues() if r.get_full_id()[2] not in ["H", "C"]]
 
     if type in ["H", "L"]:
         return [r for r in struct.get_residues() if r.get_full_id()[2] == type]
@@ -215,14 +213,17 @@ class Complex:
     def __cleanup_motifs(self):
         self.motifs = [m for m in self.motifs if m.is_trivial() is False]
 
-    def write_motifs(self, paratope_file, epitope_file):
-        #self.__cleanup_motifs()
-
-        #open(paratope_file, "w").close()
-        #open(epitope_file, "w").close()
-
+    def write_motifs(self, paratope_file):
         for m in self.motifs:
-            m.write_motifs_akbar_encoding(paratope_file, epitope_file)
+            m.write_motifs_akbar_encoding(paratope_file)
+
+    def write_motifs_victor1(self, paratope_file):
+        for m in self.motifs:
+            m.write_motifs_victor1_encoding(paratope_file)
+
+    def write_motifs_victor2(self, paratope_file):
+        for m in self.motifs:
+            m.write_motifs_victor2_encoding(paratope_file)
 
     def check_motifs(self):
         if len(self.motifs) == 0:
@@ -239,14 +240,27 @@ class Motif:
         self.encodings_target = encodings_target
         self.ab_location = ab_location
 
-    def write_motifs_akbar_encoding(self, paratope_file, epitope_file):
+    def write_motifs_akbar_encoding(self, paratope_file):
         notation_origin = self.__get_akbar_notation_from_res(self.encodings_origin)
         notation_target = self.__get_akbar_notation_from_res(self.encodings_target)
 
         with open(paratope_file, "a") as pf:
             pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "\n")
-        # with open(epitope_file, "a") as ef:
-        #     ef.write(notation_target + "\n")
+
+
+    def write_motifs_victor1_encoding(self, paratope_file):
+        notation_origin = self.__get_victor1_encoding_from_res(self.encodings_origin, self.res_origin)
+        notation_target = self.__get_victor1_encoding_from_res(self.encodings_target, self.res_target)
+
+        with open(paratope_file, "a") as pf:
+            pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "\n")
+
+    def write_motifs_victor2_encoding(self, paratope_file):
+        notation_origin = self.__get_victor2_encoding_from_res(self.encodings_origin, self.res_origin)
+        notation_target = self.__get_victor2_encoding_from_res(self.encodings_target, self.res_target)
+
+        with open(paratope_file, "a") as pf:
+            pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "\n")
     def __get_akbar_notation_from_res(self, res_encodings):
         notation = ""
         counter = 0
@@ -261,6 +275,34 @@ class Motif:
 
         return notation
 
+    def __get_victor1_encoding_from_res(self, res_encodings, res_names):
+        notation = ""
+        counter = 0
+        for i in range(len(res_encodings)):
+            if res_encodings[i] is True:
+                if counter != 0:
+                    notation += str(counter)
+                    counter = 0
+                notation += AA_TO_TYPE[AA_3to1[res_names[i].resname]]
+            else:
+                counter += 1
+
+        return notation
+
+    def __get_victor2_encoding_from_res(self, res_encodings, res_names):
+        notation = ""
+        counter = 0
+        for i in range(len(res_encodings)):
+            if res_encodings[i] is True:
+                if counter != 0:
+                    notation += str(counter)
+                    counter = 0
+                notation += AA_TO_TYPE[AA_3to1[res_names[i].resname]]
+            else:
+                counter += 1
+
+        return notation
+
     def is_trivial(self):
         if len(self.res_origin) == 1:
             return True
@@ -270,15 +312,15 @@ class Motif:
 # a = Complex("1HI6", "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets\\1HI6_1.pdb")
 # a.get_motifs()
 
-epitope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\epitope_motifs.txt"
-paratope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs.txt"
-
+paratope_file1 = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor1.txt"
+paratope_file2 = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor2.txt"
 # a.write_motifs(paratope_file, epitope_file)
 
 def read_all_motifs():
     path = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets"
-    open(epitope_file, "w").close()
-    open(paratope_file, "w").close()
+
+    open(paratope_file1, "w").close()
+    open(paratope_file2, "w").close()
     files = [f for f in listdir(path) if isfile(join(path, f))]
 
     err_files = 0
@@ -289,7 +331,8 @@ def read_all_motifs():
         try:
             comp.get_motifs()
             comp.check_motifs()
-            comp.write_motifs(paratope_file, epitope_file)
+            comp.write_motifs_victor1(paratope_file1)
+            comp.write_motifs_victor2(paratope_file2)
         except IndexError:
             print(f + " .... Index Error")
             err_files += 1
