@@ -329,7 +329,7 @@ def read_all_motifs():
 
     for f in files:
         print(f)
-        comp = Complex(f.split("_")[0], path + "\\" + f)
+        comp = Complex(f, path + "\\" + f)
         try:
             comp.get_motifs()
             comp.check_motifs()
