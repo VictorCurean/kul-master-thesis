@@ -1,0 +1,11 @@
+FoldX 4 (2011)
+by the FoldX Consortium 
+Jesper Borg, Frederic Rousseau, Joost Schymkowitz,
+Luis Serrano and Francois Stricher
+------------------------------------------------------
+
+PDB file analysed: batch
+Output type: AnalyseComplex
+List of Residues at the interface: ./datasets/5GIR_1.pdb
+interface residues between LH and DC
+SL30	NL31	NL32	eL34	YL36	LL46	RL49	YL50	QL53	IL55	SL56	IL58	QL89	SL91	FL96	VH2	YH27	YH32	WH33	NH35	MH50	eH52	EH56	TH94	eH95	FH96	DH101	YH102	KD126	PD127	KC126	IC128	IC129	IC130	SC132	oC133	AC134	YC135	

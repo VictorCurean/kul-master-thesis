@@ -14,7 +14,7 @@ class Dataset:
                     self.motifs_list.append(motif)
 
     def total_motifs(self):
-        with open(PATH_OUTFILES + "motifs_analysis", "w") as f:
+        with open(PATH_OUTFILES + "motifs_analysis_victor2", "w") as f:
             total_paratope_motifs_list = list()
             total_epitope_motifs_list = list()
             motifs_lfr1 = set()
@@ -95,6 +95,6 @@ class Dataset:
 
 
 
-ds = Dataset("C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\motifs_final.txt")
+ds = Dataset("C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor2.txt")
 ds.total_motifs()
 

@@ -120,16 +120,19 @@ class Complex:
         self.__struct = get_structure(pdb_id, pdb_file)
         self.__lc = translate_to_1_notation(get_residues_by_type(self.__struct, "L"))
         self.__hc = translate_to_1_notation(get_residues_by_type(self.__struct, "H"))
-        self.__martin_lc = get_martin_numbering(self.__lc)
-        self.__martin_hc = get_martin_numbering(self.__hc)
+        self.martin_lc = get_martin_numbering(self.__lc)
+        self.martin_hc = get_martin_numbering(self.__hc)
         self.__cutoff = 5
         self.motifs = []
 
+    def get_struct(self):
+        return self.__struct
+
     def __get_martin_scheme_by_type(self, type):
         if type == "L":
-            return [x for x in self.__martin_lc if x != '']
+            return [x for x in self.martin_lc if x != '']
         elif type == "H":
-            return [x for x in self.__martin_hc if x != '']
+            return [x for x in self.martin_hc if x != '']
 
 
     def __get_motifs_para_epi(self, begin, end, type, loc):
@@ -245,7 +248,7 @@ class Motif:
         notation_target = self.__get_akbar_notation_from_res(self.encodings_target)
 
         with open(paratope_file, "a") as pf:
-            pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "\n")
+            pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "," + self.pdb_id + "\n")
 
 
     def write_motifs_victor1_encoding(self, paratope_file):
@@ -312,15 +315,14 @@ class Motif:
 # a = Complex("1HI6", "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets\\1HI6_1.pdb")
 # a.get_motifs()
 
-paratope_file1 = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor1.txt"
-paratope_file2 = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor2.txt"
+paratope_file = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\motifs_akbar.txt"
+#paratope_file2 = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\motifs_akbar\\paratope_motifs_victor2.txt"
 # a.write_motifs(paratope_file, epitope_file)
 
 def read_all_motifs():
     path = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets"
 
-    open(paratope_file1, "w").close()
-    open(paratope_file2, "w").close()
+    open(paratope_file, "w").close()
     files = [f for f in listdir(path) if isfile(join(path, f))]
 
     err_files = 0
@@ -331,8 +333,7 @@ def read_all_motifs():
         try:
             comp.get_motifs()
             comp.check_motifs()
-            comp.write_motifs_victor1(paratope_file1)
-            comp.write_motifs_victor2(paratope_file2)
+            comp.write_motifs(paratope_file)
         except IndexError:
             print(f + " .... Index Error")
             err_files += 1

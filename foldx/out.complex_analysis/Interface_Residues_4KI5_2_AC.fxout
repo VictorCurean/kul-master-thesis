@@ -1,0 +1,11 @@
+FoldX 4 (2011)
+by the FoldX Consortium 
+Jesper Borg, Frederic Rousseau, Joost Schymkowitz,
+Luis Serrano and Francois Stricher
+------------------------------------------------------
+
+PDB file analysed: batch
+Output type: AnalyseComplex
+List of Residues at the interface: ./datasets/4KI5_2.pdb
+interface residues between LH and M
+EL28	SL30	YL32	AL92	SL93	YL94	YL96	SH30	SH31	WH33	EH35	EH50	LH52	SH54	SH56	NH58	TH95	YH97	YH98	FH99	YH100	DH100	SM2193	SM2194	QM2222	VM2223	NM2224	NM2225	PM2226	KM2227	EM2228	WM2229	LM2261	SM2263	QM2270	WM2271	TM2272	LM2273	FM2275	KM2279	VM2280	VM2282	RM2307	eM2309	QM2311	

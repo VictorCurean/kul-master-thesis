@@ -1,0 +1,11 @@
+FoldX 4 (2011)
+by the FoldX Consortium 
+Jesper Borg, Frederic Rousseau, Joost Schymkowitz,
+Luis Serrano and Francois Stricher
+------------------------------------------------------
+
+PDB file analysed: batch
+Output type: AnalyseComplex
+List of Residues at the interface: ./datasets/4XHJ_1.pdb
+interface residues between LH and E
+DL30	NL31	FL32	YL49	AL50	TL53	QL55	RL56	LL91	NL92	SL93	YL94	WH50	NH58	MH97	TH98	MH99	VH100	RH100	VH100	MH101	KE81	TE150	FE152	PE154	NE155	PE156	LE157	VE158	WE159	KE281	TE286	SE287	DE288	TE290	WE291	FE292	QE293	LE294	NE295	RE306	
