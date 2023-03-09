@@ -4,7 +4,9 @@ import requests
 AA_3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
      'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
      'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-     'ALA': 'A', 'VAL':'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+     'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M',
+     'H1S': 'H', 'H2S': 'H',
+    }
 
 
 MARTIN_NUMBERING = {"LFR1": (1, 23), "CDR-L1": (24, 34), "LFR2": (35, 49), "CDR-L2": (50, 56), "LFR3": (57, 88),
