@@ -1,5 +1,5 @@
 import Bio.PDB.Selection
-from utils import *
+from motifs.utils import *
 from Bio.PDB import NeighborSearch, PDBParser
 import re
 from os import listdir
@@ -136,6 +136,10 @@ class Complex:
 
 
     def __get_motifs_para_epi(self, begin, end, type, loc):
+        # TODO remove this
+        if (loc == "CDR-H3"):
+            b = 1
+
         ab_residues = get_residues_by_type(self.__struct, type)
         antigen_residues = get_residues_by_type(self.__struct, "C")
 
@@ -154,31 +158,41 @@ class Complex:
 
 
         antigen_nb_residues = list(set(antigen_nb_residues))
-        antigen_nb_residues.sort(key=lambda x : x.id[1], reverse=False)
+        antigen_nb_residues.sort(key=lambda x : (x.id[1], x.id[2]), reverse=False)
 
         if len(antigen_nb_residues + ab_nb_residues) != 0:
             ant_res, ant_enc = self.__get_gaps(antigen_nb_residues, antigen_residues)
             lc_res, lc_enc = self.__get_gaps(ab_nb_residues, ab_residues)
 
-            self.motifs.append(Motif(self.__pdb_id, "para-epi", lc_res, ant_res, lc_enc, ant_enc, loc))
+            motif_position_ab = list()
+            motif_position_ag = list()
+
+            for i in range(len(ab_residues)):
+                if ab_residues[i] in ab_nb_residues:
+                    motif_position_ab.append(i+1)
+            for i in range(len(antigen_residues)):
+                if antigen_residues[i] in antigen_nb_residues:
+                    motif_position_ag.append(i+1)
+
+            self.motifs.append(Motif(self.__pdb_id, "para-epi", lc_res, ant_res, lc_enc, ant_enc, loc, motif_position_ab, motif_position_ag))
 
 
     def __get_gaps(self, res_list, full_res):
         residues_no_gaps = []
         bool_encodings = []
 
-        min_res = min(res_list, key=lambda res : res.id[1])
-        max_res = max(res_list, key=lambda res: res.id[1])
+        min_res = min(res_list, key=lambda res : (res.id[1], res.id[2]))
+        max_res = max(res_list, key=lambda res: (res.id[1], res.id[2]))
 
-        index_list = [r.id[1] for r in full_res if min_res.id[1] <= r.id[1] <= max_res.id[1]]
+        index_min = full_res.index(min_res)
+        index_max = full_res.index(max_res)
 
-        for i in index_list:
-            if i in [x.id[1] for x in res_list]:
-                residues_no_gaps.append([x for x in res_list if x.id[1] == i][0])
+        for i in range(index_min, index_max + 1):
+            if full_res[i] in res_list:
                 bool_encodings.append(True)
             else:
-                residues_no_gaps.append([x for x in full_res if x.id[1] == i][0])
                 bool_encodings.append(False)
+            residues_no_gaps.append(full_res[i])
 
         return residues_no_gaps, bool_encodings
 
@@ -234,7 +248,7 @@ class Complex:
 
 
 class Motif:
-    def __init__(self, pdb_id, type, res_origin, res_target, encodings_origin, encodings_target, ab_location):
+    def __init__(self, pdb_id, type, res_origin, res_target, encodings_origin, encodings_target, ab_location, positions_ab, positions_ag):
         self.pdb_id = pdb_id
         self.type = type
         self.res_origin = res_origin
@@ -242,10 +256,15 @@ class Motif:
         self.encodings_origin = encodings_origin
         self.encodings_target = encodings_target
         self.ab_location = ab_location
+        self.positions_ab = self.__get_complete_positions_list(positions_ab)
+        self.positions_ag = self.__get_complete_positions_list(positions_ag)
+
+    def __get_complete_positions_list(self, pos_list):
+        return list(range(min(pos_list), max(pos_list)+1))
 
     def write_motifs_akbar_encoding(self, paratope_file):
-        notation_origin = self.__get_akbar_notation_from_res(self.encodings_origin)
-        notation_target = self.__get_akbar_notation_from_res(self.encodings_target)
+        notation_origin = self.get_akbar_notation_from_res(self.encodings_origin)
+        notation_target = self.get_akbar_notation_from_res(self.encodings_target)
 
         with open(paratope_file, "a") as pf:
             pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "," + self.pdb_id + "\n")
@@ -264,7 +283,7 @@ class Motif:
 
         with open(paratope_file, "a") as pf:
             pf.write(notation_origin + "," + self.ab_location + "," + notation_target + "\n")
-    def __get_akbar_notation_from_res(self, res_encodings):
+    def get_akbar_notation_from_res(self, res_encodings):
         notation = ""
         counter = 0
         for e in res_encodings:
@@ -339,4 +358,4 @@ def read_all_motifs():
             err_files += 1
     print(err_files)
 
-read_all_motifs()
+#read_all_motifs()

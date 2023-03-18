@@ -2,6 +2,7 @@ import psycopg2
 from os import listdir
 from os.path import isfile, join
 
+from motifs.structure import Complex
 from motifs.utils import AA_3to1
 
 PATH = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\"
@@ -150,14 +151,31 @@ def create_tables():
     )
     """
 
+    CREATE_MOTIFS_TABLE = """
+    CREATE TABLE IF NOT EXISTS motifs (
+    id SERIAL PRIMARY KEY,
+    pdb_id VARCHAR NOT NULL,
+    para_motif VARCHAR NOT NULL,
+    epi_motif VARCHAR NOT NULL,
+    para_start_pos INTEGER NOT NULL,
+    para_end_pos INTEGER NOT NULL,
+    epi_start_pos INTEGER NOT NULL,
+    epi_end_pos INTEGER NOT NULL,
+    interacting_residues_para INTEGER NOT NULL,
+    interacting_residues_epi INTEGER NOT NULL,
+    location VARCHAR NOT NULL
+    )
+    """
+
     conn = get_conn()
     cur = conn.cursor()
 
-    cur.execute(CREATE_PDB_TABLE)
-    cur.execute(CREATE_COMPLEX_ANALYSIS_SUMMARY_TABLE)
-    cur.execute(CREATE_COMPLEX_ANALYSIS_INDIVIDUAL_ENERGIES_TABLE)
-    cur.execute(CREATE_COMPLEX_ANALYSIS_INTERACTION_TABLE)
-    cur.execute(CREATE_RESIDUE_TABLE)
+    # cur.execute(CREATE_PDB_TABLE)
+    # cur.execute(CREATE_COMPLEX_ANALYSIS_SUMMARY_TABLE)
+    # cur.execute(CREATE_COMPLEX_ANALYSIS_INDIVIDUAL_ENERGIES_TABLE)
+    # cur.execute(CREATE_COMPLEX_ANALYSIS_INTERACTION_TABLE)
+    # cur.execute(CREATE_RESIDUE_TABLE)
+    cur.execute(CREATE_MOTIFS_TABLE)
 
     conn.commit()
     cur.close()
@@ -286,6 +304,45 @@ def insert_residue_information(pdb_id, conn):
     conn.commit()
     cur.close()
 
+def insert_motifs():
+    path = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets"
+    files = [f for f in listdir(path) if isfile(join(path, f))]
+
+    conn = get_conn()
+    cur = conn.cursor()
+
+    for f in files:
+        print(f)
+        comp = Complex(f, path + "\\" + f)
+        comp.get_motifs()
+
+        pdb_id = f.split(".")[0]
+
+        for motif in comp.motifs:
+            para_motif = motif.get_akbar_notation_from_res(motif.encodings_origin)
+            epi_motif = motif.get_akbar_notation_from_res(motif.encodings_target)
+            interacting_residues_para = para_motif.count("X")
+            interacting_residues_epi = epi_motif.count("X")
+            start_pos_para = min(motif.positions_ab)
+            end_pos_para = max(motif.positions_ab)
+            start_pos_epi = min(motif.positions_ag)
+            end_pos_epi = max(motif.positions_ag)
+            motif_para = motif.get_akbar_notation_from_res(motif.encodings_origin)
+            motif_epi = motif.get_akbar_notation_from_res(motif.encodings_target)
+            location = motif.ab_location
+
+            INSERT_SQL = """INSERT INTO motifs(pdb_id, para_motif, epi_motif, para_start_pos, para_end_pos, epi_start_pos, epi_end_pos, interacting_residues_para, interacting_residues_epi, location)
+            VALUES ('{pdb_id}', '{para_motif}', '{epi_motif}', '{para_start_pos}', '{para_end_pos}', '{epi_start_pos}', '{epi_end_pos}', '{interacting_residues_para}', '{interacting_residues_epi}', '{location}')"""
+
+            cur.execute(INSERT_SQL.format(pdb_id=pdb_id, para_motif=motif_para, epi_motif=motif_epi, para_start_pos=start_pos_para, para_end_pos=end_pos_para, epi_end_pos=end_pos_epi, epi_start_pos=start_pos_epi, interacting_residues_para=interacting_residues_para, interacting_residues_epi=interacting_residues_epi, location=location))
+            conn.commit()
+    cur.close()
+    conn.close()
+
+
+
+
+
 
 def insert_pdbs():
     path = "C:\\Users\\curea\\Documents\\Thesis Code\\kul-master-thesis\\kul-master-thesis\\kul-thesis-ab\\datasets\\"
@@ -317,4 +374,6 @@ def insert_pdbs():
     conn.close()
 
 create_tables()
-insert_pdbs()
+#insert_pdbs()
+
+insert_motifs()
